@@ -29,7 +29,7 @@ int main(){
     for(int j = 0; j < numProc; j++){
         //find shortest burst time
         for (int i = 1; i < numProc; i++){
-            if((burstTime[i] < burstTime[loc]) && (burstTime[i] != 0) && (burstTime[loc] != 0)){
+            if(burstTime[i] < burstTime[loc]){
                 loc = i;
             }
         }
