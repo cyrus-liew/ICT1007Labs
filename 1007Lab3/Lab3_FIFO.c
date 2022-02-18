@@ -17,24 +17,30 @@ int buffer[BUFFER_SIZE];
 
 pthread_mutex_t mutex;
 
+//Function to generate item number
 int randomNum(){
     return rand() % 999 + 1;
 }
 
+//Function to generate sleep timer
 int randSlp(){
     return rand() % 3 + 1;
 }
 
+//producer thread function
 void *pro_func(void *id){
     long pid = (long) id + 1;
     while(true){
-
+        
+        //Checks if sleep timer elapsed, exits thread if true
         if(!run){
             pthread_exit(NULL);
         }
 
+        //Sleep for 1 - 3 seconds
         sleep(randSlp());   
         
+        //Create lock, check if buffer is full, if full do nothing, if not add item to buffer
         pthread_mutex_lock(&mutex);
         if(counter != BUFFER_SIZE){
             buffer[in] = randomNum();
@@ -47,21 +53,25 @@ void *pro_func(void *id){
     }    
 }
 
+//Consumer thread function
 void *con_func(void *id){
     int consume;
     long cid = (long) id + 1;
     while(true){
 
+        //Checks if sleep timer elapsed, exits thread if true
         if(!run){
             pthread_exit(NULL);
         }
 
+        //Sleep for 1 - 3 seconds
         sleep(randSlp());
 
+        //Create lock, check if buffer not empty, if empty do nothing, if not remove item from buffer
         pthread_mutex_lock(&mutex);
         if(counter > 0){
             consume = buffer[out];
-            printf("Consumer%ld removed item %d\n", cid, buffer[out]);
+            printf("Consumer%ld removed item\t\t %d\n", cid, buffer[out]);
             out = (out + 1) % BUFFER_SIZE;
             counter--;
             //printf("%d\n", counter);
@@ -79,6 +89,7 @@ int main(int argc, char *argv[]){
     long int arr[2];
     char *p;
 
+    //Input validation
     if(argc != 4){
         printf("Enter 3 arguments.\n");
 
@@ -112,23 +123,28 @@ int main(int argc, char *argv[]){
     pthread_t pro_threads[no_pro];
     pthread_t con_threads[no_con];
 
+    //Loops to create threads
     for(i = 0; i < no_pro; i++){
         pro_id = pthread_create(&pro_threads[i], NULL, &pro_func, (void *)i);
         if(pro_id == 0){
-            printf("Producer%ld thread created succesfully\n", i+1);
+            printf("Producer%ld thread created successfully\n", i+1);
         }
     }
     
     for(i = 0; i < no_con; i++){
         con_id = pthread_create(&con_threads[i], NULL, &con_func, (void *)i);
         if(con_id == 0){
-            printf("Consumer%ld thread created succesfully\n", i+1);
+            printf("Consumer%ld thread created successfully\n", i+1);
         }
     }
 
+    //Main process sleep
     sleep(sleeptimer);
+
+    //Set flag to false so threads exit
     run = false;
 
+    //Join threads
     for(x = 0; x < no_pro; x++){
         pthread_join(pro_threads[x], NULL);
     }
@@ -139,6 +155,7 @@ int main(int argc, char *argv[]){
     printf("Sleep time elapsed. Producers and Consumers terminated\n");
     printf("Number of remaining items on buffer = %d\n" , counter);
 
+    //Destroy mutex
     pthread_exit(NULL);
     pthread_mutex_destroy(&mutex);
 
