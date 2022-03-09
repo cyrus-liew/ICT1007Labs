@@ -37,6 +37,7 @@ int AllocateBlocks(int Size) {
         if(blockStatus[checkBlock] == 0){
             blockList[i] = checkBlock;
             blockStatus[checkBlock] = 1;
+            //printf("%d ", blockList[i]);
             count++;
             i++;
         }
@@ -49,14 +50,13 @@ int AllocateBlocks(int Size) {
 int main()  
 {  
     int i = 0, j = 0, numFiles = 0, nextBlock= 0, ret = 1;  
-    char s[20]; struct block *temp = NULL; struct block *head = NULL; struct block *new = NULL;
-    head = malloc(sizeof(struct block));
-    temp = malloc(sizeof(struct block));
-    new = malloc(sizeof(struct block));
+    char s[20];
+    struct block *temp = (struct block*) malloc(sizeof(struct block)); 
+    struct block *head = (struct block*) malloc(sizeof(struct block));
     
     printf("File allocation method: LINKED LIST\n");
-    printf("Totla blocks: 32\n");
-    printf("File allocation start t block: 8\n");
+    printf("Total blocks: 32\n");
+    printf("File allocation start at block: 8\n");
     printf("File allocation end at block: 31\n");
     printf("Size (kB) of each block: 1\n\n");
 
@@ -73,16 +73,23 @@ int main()
     for(i = 0; i < numFiles; i++) {  
       
         ret = AllocateBlocks(fileTable[i].fileSize); 
+        printf("\n");
         
         if (ret == 1){
             return 0;
         }
         else{
-            head->blockNumber = blockList[0];
-            head->next = NULL;
-            for(j = 1; j < fileTable[i].fileSize; j++){
+            head = NULL;
+            for(j = 0; j < fileTable[i].fileSize; j++){
+                struct block *new = (struct block*) malloc(sizeof(struct block));
                 new->blockNumber = blockList[j];
                 new->next = NULL;
+
+                if(head == NULL){
+                    head = new;
+                    continue;
+                }
+
                 temp = head;
 
                 while(temp->next != NULL){
@@ -93,8 +100,6 @@ int main()
             }
 
             fileTable[i].sb = head;
-            
-
         }
       
     } 
@@ -102,12 +107,12 @@ int main()
     printf("FILE_fileName\tFILE_SIZE\tBLOCKS_OCCUPIED\n");
 
     for(i = 0; i < numFiles; i++){
-        printf("%s\t%d\t", fileTable[i].fileName, fileTable[i].fileSize);
-        temp = fileTable[i].sb;
-        //while(temp->next != NULL){
+        printf("%s\t%d\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].sb->blockNumber);
+        temp = fileTable[i].sb->next;
+        while(temp != NULL){
             printf("-%d", temp->blockNumber);
             temp = temp->next;
-        //}
+        }
         printf("\n");
     }
 
@@ -115,5 +120,7 @@ int main()
 
 //Seed the pseudo-random number generator used by rand() with the value seed 
 srand(1234); 
+
+return 0;
 
 }
