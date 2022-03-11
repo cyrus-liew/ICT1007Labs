@@ -1,17 +1,23 @@
 #include<stdio.h>  
-#include<stdlib.h>  
+#include<stdlib.h> 
  
 #define TOTAL_DISK_BLOCKS 32 
 #define TOTAL_DISK_INODES 8  
 int blockStatus[TOTAL_DISK_BLOCKS]; // free = 0 
 int blockList[TOTAL_DISK_BLOCKS - TOTAL_DISK_INODES]; // list of blocks of a file 
- 
+
+
 struct file_table {  
     char fileName[20];  
-    int fileSize; 
-    int blocks[TOTAL_DISK_BLOCKS - TOTAL_DISK_INODES]; 
+    int fileSize;  
+    struct block *sb;  
 }; 
 struct file_table fileTable[TOTAL_DISK_BLOCKS - TOTAL_DISK_INODES]; 
+ 
+struct block {  
+    int blockNumber;  
+    struct block *next;  
+};  
  
 int AllocateBlocks(int Size) { 
     int i = 0, count = 0, checkBlock = 0; 
@@ -23,7 +29,7 @@ int AllocateBlocks(int Size) {
         if (blockStatus[i] == 0) 
             count++; 
     if (count < Size) 
-        return 1;  // not enough free blocks     
+        return 1;  // not enough free blocks
 
     count = 0;
     i = 0;
@@ -39,13 +45,21 @@ int AllocateBlocks(int Size) {
     }
 
     return 0;
+    
 } 
  
-int main() {  
-    int i = 0, j = 0, numFiles = 0, ret = 1;  
-    char s[20]; 
-
-    printf("File allocation method: INDEXED\n");
+int main()  
+{  
+    int i = 0, j = 0, numFiles = 0, nextBlock= 0, ret = 1;  
+    char s[20];
+    struct block *temp = (struct block*) malloc(sizeof(struct block)); 
+    struct block *head = (struct block*) malloc(sizeof(struct block));
+    blockStatus[11] = 1;
+    blockStatus[12] = 1;
+    blockStatus[13] = 1;
+    srand(654); 
+    
+    printf("File allocation method: LINKED LIST\n");
     printf("Total blocks: 32\n");
     printf("File allocation start at block: 8\n");
     printf("File allocation end at block: 31\n");
@@ -61,7 +75,8 @@ int main() {
         scanf("%d", &fileTable[i].fileSize);
     }
 
-    for(i = 0; i < numFiles; i++) {
+    for(i = 0; i < numFiles; i++) {  
+      
         ret = AllocateBlocks(fileTable[i].fileSize); 
         printf("\n");
         
@@ -69,26 +84,46 @@ int main() {
             return 0;
         }
         else{
+            head = NULL;
             for(j = 0; j < fileTable[i].fileSize; j++){
-                fileTable[i].blocks[j] = blockList[j];
-            }
-        }      
-    } 
+                struct block *new = (struct block*) malloc(sizeof(struct block));
+                new->blockNumber = blockList[j];
+                new->next = NULL;
 
+                if(head == NULL){
+                    head = new;
+                    continue;
+                }
+
+                temp = head;
+
+                while(temp->next != NULL){
+                    temp = temp->next;
+                }
+
+                temp->next = new;
+            }
+
+            fileTable[i].sb = head;
+        }
+      
+    } 
+    
     printf("FILE_fileName\tFILE_SIZE\tBLOCKS_OCCUPIED\n");
 
     for(i = 0; i < numFiles; i++){
-        printf("%s\t\t%d\t\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].blocks[0]);
-        for(j = 1; j < fileTable[i].fileSize; j++){
-            printf("-%d", fileTable[i].blocks[j]);
+        printf("%s\t\t%d\t\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].sb->blockNumber);
+        temp = fileTable[i].sb->next;
+        while(temp != NULL){
+            printf("-%d", temp->blockNumber);
+            temp = temp->next;
         }
-        
         printf("\n");
     }
 
     printf("File allocation completed. Exiting.");
 
-//Seed the pseudo-random number generator used by rand() with the value seed 
-srand(1234); 
+
 return 0;
+
 }

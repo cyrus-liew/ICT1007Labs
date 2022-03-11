@@ -3,13 +3,15 @@
  
 #define TOTAL_DISK_BLOCKS 32 
 #define TOTAL_DISK_INODES 8  
+#define BLOCK_SIZE 2
 int blockStatus[TOTAL_DISK_BLOCKS]; // free = 0  
 int blockStart; 
  
 struct file_table {  
     char fileName[20];  
     int startBlock; 
-    int fileSize; 
+    int fileSize;
+    int numBlocks;
     int allotStatus; 
 }; 
 struct file_table fileTable[TOTAL_DISK_BLOCKS - TOTAL_DISK_INODES]; 
@@ -51,6 +53,8 @@ int main()
 {  
     int i =0, j = 0, numFiles = 0, nextBlock = 0, ret = 1;  
     char s[20];  
+    //Seed the pseudo-random number generator used by rand() with the value seed 
+    srand(654); 
     
     printf("File allocation method: SEQUENTIAL\n");
     printf("Total blocks: 32\n");
@@ -66,18 +70,25 @@ int main()
         scanf("%19s", fileTable[i].fileName);
         printf("\nEnter the size (kB) of file #%d:", i + 1);
         scanf("%d", &fileTable[i].fileSize);
+
+        if(fileTable[i].fileSize % BLOCK_SIZE == 0){
+            fileTable[i].numBlocks = fileTable[i].fileSize / BLOCK_SIZE;
+        }
+        else{
+            fileTable[i].numBlocks = fileTable[i].fileSize / BLOCK_SIZE + 1;
+        }
     }
 
     for(i = 0; i < numFiles; i++) {  
       
-      ret = AllocateBlocks(fileTable[i].fileSize); 
+      ret = AllocateBlocks(fileTable[i].numBlocks); 
       
       if (ret == 1){
           return 0;
       }
       else{
           fileTable[i].startBlock = blockStart;
-          for(j = blockStart; j < blockStart + fileTable[i].fileSize; j++){
+          for(j = blockStart; j < blockStart + fileTable[i].numBlocks; j++){
               blockStatus[j] = 1;
           }
       }
@@ -88,7 +99,7 @@ int main()
 
     for(i = 0; i < numFiles; i++){
         printf("%s\t\t%d\t\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].startBlock);
-        for(j = 1; j < fileTable[i].fileSize; j++){
+        for(j = 1; j < fileTable[i].numBlocks; j++){
             printf("-%d", fileTable[i].startBlock + j);
         }
         printf("\n");
@@ -96,8 +107,7 @@ int main()
 
     printf("File allocation completed. Exiting.");
 
-//Seed the pseudo-random number generator used by rand() with the value seed 
-srand(1234); 
+
 
 return 0;
 }

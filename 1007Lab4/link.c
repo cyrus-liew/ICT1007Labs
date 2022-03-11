@@ -107,7 +107,7 @@ int main()
     printf("FILE_fileName\tFILE_SIZE\tBLOCKS_OCCUPIED\n");
 
     for(i = 0; i < numFiles; i++){
-        printf("%s\t%d\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].sb->blockNumber);
+        printf("%s\t\t%d\t\t%d", fileTable[i].fileName, fileTable[i].fileSize, fileTable[i].sb->blockNumber);
         temp = fileTable[i].sb->next;
         while(temp != NULL){
             printf("-%d", temp->blockNumber);
